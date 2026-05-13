@@ -25,9 +25,7 @@
 <div class="music-player">
 
     <div class="cover">
-        <img src="{% static 'images/Admirin_You.jpg' %}">
-         <img src="{% static 'images/Cheap-thrills.jpg' %}">
-          <img src="{% static 'images/wanna_be_yours.jpg' %}">
+        <img src="{{ item.image.url }}"/>
     </div>
 
     <div class="titre">
@@ -53,13 +51,7 @@
 
 </center>
     <div class="lecteur">
-       <audio controls>
-    <source src="{% static 'songs/Admirin_You.mp3' %}" type="audio/mp3">
-    <audio controls>
-    <source src="{% static 'songs/Cheap-thrills.mp3' %}" type="audio/mp3">
-    <audio controls>
-    <source src="{% static 'songs/I_Wanna_Be_Yours.mp3' %}" type="audio/mp3">
-</audio>
+        <audio class="fc-media" style="width: 100%;" controls>
             <source 
                 src="{% if item.audio_file %}{{ item.audio_file.url }}{% else %}{{ item.audio_link }}{% endif %}" 
                 type="audio/mp3"
