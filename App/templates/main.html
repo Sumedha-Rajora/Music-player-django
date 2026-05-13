@@ -1,0 +1,79 @@
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>music player</title>
+</head>
+
+<body>
+
+<!-- ================= SEARCH BAR (ALWAYS VISIBLE) ================= -->
+<form method="GET" style="margin-bottom:20px;">
+    <input 
+        type="text" 
+        name="q"
+        placeholder="Search song..."
+        value="{{ query|default:'' }}"
+    >
+    <button type="submit">Search</button>
+</form>
+
+<hr>
+
+<!-- ================= SONG DISPLAY ================= -->
+{% for item in page_obj %}
+
+<div class="music-player">
+
+    <div class="cover">
+        <img src="{{ item.image.url }}"/>
+    </div>
+
+    <div class="titre">
+        <h3>{{ item.artist }}</h3>
+        <h1>{{ item.title }}</h1>
+    </div>
+
+    <<center>
+
+{% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">
+        <i class="fa fa-step-backward fa-2x"></i>
+    </a>
+{% endif %}
+
+&nbsp;&nbsp;&nbsp;
+
+{% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">
+        <i class="fa fa-step-forward fa-2x"></i>
+    </a>
+{% endif %}
+
+</center>
+    <div class="lecteur">
+        <audio class="fc-media" style="width: 100%;" controls>
+            <source 
+                src="{% if item.audio_file %}{{ item.audio_file.url }}{% else %}{{ item.audio_link }}{% endif %}" 
+                type="audio/mp3"
+            />
+        </audio>
+    </div>
+
+</div>
+
+<div class="right-section">
+    <div class="lyrics-container">
+        <div class="lyrics">
+            <p class="song-lyrics" data-lyrics="{{ item.lyrics }}"></p>
+        </div>
+    </div>
+</div>
+
+<hr>
+
+{% empty %}
+<!-- EMPTY PAGE (when no search OR no result) -->
+{% endfor %}
+
+</body>
+</html>
