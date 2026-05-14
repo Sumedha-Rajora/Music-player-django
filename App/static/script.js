@@ -13,21 +13,12 @@ var audioPlayer = {
             if (media.length) {
                 media.mediaelementplayer({
                     audioHeight: 40,
-                    features: [
-                        'playpause',
-                        'current',
-                        'duration',
-                        'progress',
-                        'volume',
-                        'tracks',
-                        'fullscreen'
-                    ],
+                    features: ['playpause', 'current', 'duration', 'progress', 'volume', 'tracks', 'fullscreen'],
                     alwaysShowControls: true,
                     timeAndDurationSeparator: '<span></span>',
                     iPadUseNativeControls: true,
                     iPhoneUseNativeControls: true,
                     AndroidUseNativeControls: true,
-                    // Success callback to ensure we can sync lyrics once player is ready
                     success: function(mediaElement, originalNode) {
                         syncLyrics(mediaElement);
                     }
@@ -39,40 +30,40 @@ var audioPlayer = {
 
 audioPlayer.init();
 
-/**
- * Cleaned up Lyric Sync Logic
- * This replaces the "split('\n')" logic which was causing the JSON code to show
- */
 function syncLyrics(mediaElement) {
     const lyricsContainer = document.getElementById('song-lyrics');
     if (!lyricsContainer) return;
 
     let lyricsData = [];
     try {
-        // Retrieve the data attribute
-        const rawData = lyricsContainer.getAttribute('data-lyrics');
-        // Parse the JSON string (this fixes the \u0022 issue)
-        lyricsData = JSON.parse(rawData);
+        // 1. Get the raw data from the attribute
+        let rawData = lyricsContainer.getAttribute('data-lyrics');
+
+        // 2. Double-parsing logic: Handles strings escaped by Django's escapejs
+        // We wrap it in quotes and parse it to resolve Unicode/escaped characters first
+        const cleanJSONString = JSON.parse('"' + rawData + '"');
+        lyricsData = JSON.parse(cleanJSONString);
+        
     } catch (e) {
-        console.warn("Lyrics data is not valid JSON or is empty.");
+        console.error("JSON Parsing Error at position:", e.message);
         return;
     }
 
-    // Listen for time updates from the MediaElement player
     mediaElement.addEventListener('timeupdate', function() {
         const currentTime = mediaElement.currentTime;
         let activeLyric = "";
 
-        // Find the line that matches the current time
-        for (let i = 0; i < lyricsData.length; i++) {
-            if (currentTime >= timeToSeconds(lyricsData[i].time)) {
-                activeLyric = lyricsData[i].lyrics;
-            } else {
-                break;
+        // Check if lyricsData is an array before looping
+        if (Array.isArray(lyricsData)) {
+            for (let i = 0; i < lyricsData.length; i++) {
+                if (currentTime >= timeToSeconds(lyricsData[i].time)) {
+                    activeLyric = lyricsData[i].lyrics;
+                } else {
+                    break;
+                }
             }
         }
 
-        // Update display if the lyric has changed
         if (lyricsContainer.innerText !== activeLyric) {
             lyricsContainer.innerText = activeLyric;
         }
@@ -80,10 +71,10 @@ function syncLyrics(mediaElement) {
 }
 
 function timeToSeconds(timeStr) {
-    if (!timeStr) return 0;
+    if (!timeStr || typeof timeStr !== 'string') return 0;
     const parts = timeStr.split(':').map(parseFloat);
     if (parts.length === 2) {
-        return parts[0] * 60 + parts[1]; // MM:SS
+        return parts[0] * 60 + parts[1];
     }
-    return parts[0]; // Seconds only
+    return parts[0] || 0;
 }
