@@ -1,69 +1,56 @@
-var audio = {
-    init: function() {
-        var $that = this;
-        $(function() {
-            $that.components.media();
-        });
-    },
-
-    components: {
-
-        media: function(target) {
-
-            var media = $('audio.fc-media', (target !== undefined) ? target : 'body');
-
-            if (media.length) {
-
-                media.mediaelementplayer({
-                    audioHeight: 40,
-                    features : [
-                        'playpause',
-                        'current',
-                        'duration',
-                        'progress',
-                        'volume',
-                        'tracks',
-                        'fullscreen'
-                    ],
-
-                    alwaysShowControls: true,
-                    timeAndDurationSeparator: '<span></span>',
-                    iPadUseNativeControls: true,
-                    iPhoneUseNativeControls: true,
-                    AndroidUseNativeControls: true
-                });
-            }
-        },
-    },
-};
-
-audio.init();
+var audioPlayer = document.querySelector("audio");
+var lyricsContainer = document.getElementById("song-lyrics");
 
 let lyrics = [];
 
-let lyricsElement = document.getElementById("song-lyrics");
+if (lyricsContainer) {
 
-if (lyricsElement) {
-
-    let rawLyrics = lyricsElement.getAttribute("data-lyrics");
+    let rawLyrics = lyricsContainer.getAttribute("data-lyrics");
 
     if (rawLyrics && rawLyrics.trim() !== "") {
 
-        lyrics = rawLyrics.split("\n");
+        let lines = rawLyrics.split("\n");
+
+        lines.forEach(line => {
+
+            let match = line.match(/\[(\d+):(\d+\.\d+)\](.*)/);
+
+            if (match) {
+
+                let minutes = parseInt(match[1]);
+                let seconds = parseFloat(match[2]);
+
+                lyrics.push({
+                    time: minutes * 60 + seconds,
+                    text: match[3].trim()
+                });
+            }
+        });
 
         console.log(lyrics);
 
-        document.getElementById("song-lyrics").innerHTML =
-            lyrics.join("<br>");
-
-    } else {
-
-        console.warn("Lyrics are empty");
-
     }
+}
 
-} else {
+if (audioPlayer) {
 
-    console.warn("Lyrics element not found");
+    audioPlayer.addEventListener("timeupdate", function () {
 
+        let currentTime = audioPlayer.currentTime;
+
+        for (let i = 0; i < lyrics.length; i++) {
+
+            if (
+                currentTime >= lyrics[i].time &&
+                (
+                    i === lyrics.length - 1 ||
+                    currentTime < lyrics[i + 1].time
+                )
+            ) {
+
+                lyricsContainer.innerHTML = lyrics[i].text;
+                break;
+            }
+        }
+    });
 }
