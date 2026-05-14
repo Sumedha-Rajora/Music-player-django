@@ -64,11 +64,9 @@
 <div class="right-section">
     <div class="lyrics-container">
         <div class="lyrics">
-            <!-- We use escapejs to prevent the "Unterminated string" error -->
-            <p id="song-lyrics" 
-               class="song-lyrics" 
-               data-lyrics="{{ item.lyrics|escapejs }}">
-            </p>
+            <!-- This tag safely handles all \u000D and \u0022 characters -->
+            {{ item.lyrics|json_script:"lyrics-data" }}
+            <p id="song-lyrics" class="song-lyrics"></p>
         </div>
     </div>
 </div>

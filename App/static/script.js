@@ -29,23 +29,26 @@ var audioPlayer = {
 };
 
 audioPlayer.init();
-
 function syncLyrics(mediaElement) {
     const lyricsContainer = document.getElementById('song-lyrics');
-    if (!lyricsContainer) return;
+    const lyricsScript = document.getElementById('lyrics-data');
+    
+    if (!lyricsContainer || !lyricsScript) {
+        console.warn("Lyrics elements missing");
+        return;
+    }
 
     let lyricsData = [];
     try {
-        // 1. Get the raw data from the attribute
-        let rawData = lyricsContainer.getAttribute('data-lyrics');
-
-        // 2. Double-parsing logic: Handles strings escaped by Django's escapejs
-        // We wrap it in quotes and parse it to resolve Unicode/escaped characters first
-        const cleanJSONString = JSON.parse('"' + rawData + '"');
-        lyricsData = JSON.parse(cleanJSONString);
+        // This helper method automatically handles the \u000D and formatting
+        lyricsData = JSON.parse(lyricsScript.textContent);
         
+        // If the data is still a string (double encoded), parse it once more
+        if (typeof lyricsData === 'string') {
+            lyricsData = JSON.parse(lyricsData);
+        }
     } catch (e) {
-        console.error("JSON Parsing Error at position:", e.message);
+        console.error("Final JSON Parse Error:", e);
         return;
     }
 
@@ -53,7 +56,6 @@ function syncLyrics(mediaElement) {
         const currentTime = mediaElement.currentTime;
         let activeLyric = "";
 
-        // Check if lyricsData is an array before looping
         if (Array.isArray(lyricsData)) {
             for (let i = 0; i < lyricsData.length; i++) {
                 if (currentTime >= timeToSeconds(lyricsData[i].time)) {
@@ -68,13 +70,4 @@ function syncLyrics(mediaElement) {
             lyricsContainer.innerText = activeLyric;
         }
     });
-}
-
-function timeToSeconds(timeStr) {
-    if (!timeStr || typeof timeStr !== 'string') return 0;
-    const parts = timeStr.split(':').map(parseFloat);
-    if (parts.length === 2) {
-        return parts[0] * 60 + parts[1];
-    }
-    return parts[0] || 0;
 }
