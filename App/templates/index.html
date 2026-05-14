@@ -30,25 +30,42 @@
 
  <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const audio = document.getElementById('fc-media');
     const lyricsContainer = document.getElementById('song-lyrics');
-    let currentLyricIndex = 0;
+    if (!lyricsContainer) return;
 
-    const lyricsData = JSON.parse(document.getElementById('song-lyrics').getAttribute('data-lyrics'));
+    // 1. Parse the JSON data correctly
+    let lyricsData = [];
+    try {
+        lyricsData = JSON.parse(lyricsContainer.getAttribute('data-lyrics'));
+    } catch (e) {
+        console.error("Failed to parse lyrics JSON", e);
+        return;
+    }
 
-    audio.addEventListener('timeupdate', function () {
-      const currentTime = audio.currentTime;
+    // 2. Target the audio element (MediaElement.js creates a hidden native element)
+    // We use a selector that works with MediaElementPlayer's structure
+    $('audio.fc-media').on('timeupdate', function (e) {
+        const currentTime = e.target.currentTime;
+        let activeLyric = "";
 
-      while (currentLyricIndex < lyricsData.length - 1 && currentTime >= timeToSeconds(lyricsData[currentLyricIndex + 1].time)) {
-        currentLyricIndex++;
-      }
-
-      lyricsContainer.innerText = lyricsData[currentLyricIndex].lyrics;
+        // 3. Find the current lyric based on timestamp
+        for (let i = 0; i < lyricsData.length; i++) {
+            if (currentTime >= timeToSeconds(lyricsData[i].time)) {
+                activeLyric = lyricsData[i].lyrics;
+            } else {
+                break;
+            }
+        }
+        
+        // Update the container only if the text changed
+        if (lyricsContainer.innerText !== activeLyric) {
+            lyricsContainer.innerText = activeLyric;
+        }
     });
 
     function timeToSeconds(time) {
-      const [minutes, seconds] = time.split(':').map(parseFloat);
-      return minutes * 60 + seconds;
+        const [minutes, seconds] = time.split(':').map(parseFloat);
+        return minutes * 60 + seconds;
     }
 });
 

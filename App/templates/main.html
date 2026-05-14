@@ -64,10 +64,11 @@
 <div class="right-section">
     <div class="lyrics-container">
         <div class="lyrics">
-           <p id="song-lyrics"
-   class="song-lyrics"
-   data-lyrics="{{ item.lyrics|escapejs }}">
-</p>
+            <!-- Note: Use 'safe' to keep the JSON structure intact -->
+            <p id="song-lyrics" class="song-lyrics" data-lyrics='{{ item.lyrics|safe }}'></p>
+        </div>
+    </div>
+</div>
         </div>
     </div>
 </div>
