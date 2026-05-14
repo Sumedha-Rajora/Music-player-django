@@ -24,18 +24,30 @@
         },
     };
     audio.init();
-    let lyrics = [];
+   let lyrics = [];
 
-try {
-    let rawLyrics = `{{ song.lyrics|escapejs }}`;
+let lyricsElement = document.getElementById("song-lyrics");
+
+if (lyricsElement) {
+
+    let rawLyrics = lyricsElement.getAttribute("data-lyrics");
 
     if (rawLyrics && rawLyrics.trim() !== "") {
-        lyrics = JSON.parse(rawLyrics);
+
+        lyrics = rawLyrics.split("\n");
+
+        console.log(lyrics);
+
     } else {
+
         console.warn("Lyrics are empty");
+
     }
-} catch (error) {
-    console.error("Invalid JSON format in lyrics:", error);
+
+} else {
+
+    console.warn("Lyrics element not found");
+
 }
 
 
