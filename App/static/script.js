@@ -1,4 +1,6 @@
-// Function to convert "00:17.87" to seconds
+/**
+ * 1. Helper function defined at the TOP to avoid "ReferenceError"
+ */
 function timeToSeconds(timeStr) {
     if (!timeStr || typeof timeStr !== 'string') return 0;
     const parts = timeStr.split(':').map(parseFloat);
@@ -27,30 +29,37 @@ var audioPlayer = {
                     alwaysShowControls: true,
                     timeAndDurationSeparator: '<span></span>',
                     success: function(mediaElement, originalNode) {
-                        // Start syncing once the player is ready
+                        
+                        // 2. Locate the lyrics data safely
                         const lyricsContainer = document.getElementById('song-lyrics');
                         const lyricsScript = document.getElementById('lyrics-data');
                         
-                        if (!lyricsContainer || !lyricsScript) return;
+                        if (!lyricsContainer || !lyricsScript) {
+                            console.warn("Lyrics components not found in HTML.");
+                            return;
+                        }
 
-                        let lyricsData = [];
+                        let lyricsData = null;
                         try {
-                            // Parse the data from the json_script tag
-                            lyricsData = JSON.parse(lyricsScript.textContent);
-                            // If it's a double-string, parse it again
+                            // Parse data from the json_script tag
+                            const content = lyricsScript.textContent;
+                            lyricsData = JSON.parse(content);
+                            
+                            // Handle double-encoding if it exists
                             if (typeof lyricsData === 'string') {
                                 lyricsData = JSON.parse(lyricsData);
                             }
                         } catch (e) {
-                            console.error("Lyrics data error:", e);
+                            console.error("Failed to parse lyrics JSON:", e);
                         }
 
+                        // 3. Sync lyrics on timeupdate
                         mediaElement.addEventListener('timeupdate', function() {
                             const currentTime = mediaElement.currentTime;
-                            let activeLyric = "";
+                            let activeLyric = " ";
 
-                            // Ensure lyricsData exists and is an array before checking length
-                            if (lyricsData && Array.isArray(lyricsData)) {
+                            // CRITICAL FIX: Check if lyricsData is actually an array before checking .length
+                            if (lyricsData && Array.isArray(lyricsData) && lyricsData.length > 0) {
                                 for (let i = 0; i < lyricsData.length; i++) {
                                     if (currentTime >= timeToSeconds(lyricsData[i].time)) {
                                         activeLyric = lyricsData[i].lyrics;
@@ -60,6 +69,7 @@ var audioPlayer = {
                                 }
                             }
 
+                            // Update the UI
                             if (lyricsContainer.innerText !== activeLyric) {
                                 lyricsContainer.innerText = activeLyric;
                             }

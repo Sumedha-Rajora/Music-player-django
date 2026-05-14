@@ -63,9 +63,10 @@
 
 <div class="right-section">
     <div class="lyrics-container">
+        <!-- 1. This creates the 'lyrics-data' script tag for JS to read -->
+        {{ item.lyrics|json_script:"lyrics-data" }}
         <div class="lyrics">
-            <!-- This tag safely handles all \u000D and \u0022 characters -->
-            {{ item.lyrics|json_script:"lyrics-data" }}
+            <!-- 2. This is where the text will actually show up -->
             <p id="song-lyrics" class="song-lyrics"></p>
         </div>
     </div>
